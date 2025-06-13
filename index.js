@@ -7,6 +7,6 @@ app.use(express.json())
 
 dbConnection()
 
-app.use('/products', require('./routes/products'))
+app.use('/users', require('./routes/users'))
 
 app.listen(PORT, () => console.log(`Server started at port ${PORT}`))
