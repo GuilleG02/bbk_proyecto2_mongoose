@@ -1,0 +1,27 @@
+{
+  "name": "bbk_proyecto2_mongoose",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GuilleG02/bbk_proyecto2_mongoose.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GuilleG02/bbk_proyecto2_mongoose/issues"
+  },
+  "homepage": "https://github.com/GuilleG02/bbk_proyecto2_mongoose#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.15.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
