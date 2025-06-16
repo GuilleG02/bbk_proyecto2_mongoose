@@ -78,6 +78,25 @@ async logout(req, res) {
   }
 },
 
+async getProfile(req, res) {
+  try {
+
+    if (!req.user) {
+      return res.status(401).send({ message: 'Usuario no autenticado' });
+    }
+
+    const userObj = req.user.toObject();
+    const { password, tokens, ...userData } = userObj;
+
+    res.send({ user: userData });
+  } catch (error) {
+    
+    console.error('Error en getProfile:', error);
+    res.status(500).send({ message: 'Error al obtener perfil del usuario' });
+  }
+},
+
+
 
 
 
