@@ -34,7 +34,7 @@ async register(req, res, next) {
 
 async login(req, res) {
   try {
-    const user = await User.findOne({ email: req.body.email })
+    const user = await User.findOne({ email: req.body.email }).select('+password');
 
     if (!user) {
       return res.status(400).send({ message: 'Usuario o contraseña incorrectos' })
