@@ -1,0 +1,34 @@
+const mongoose = require('mongoose');
+const { Schema, Types } = mongoose;
+
+const PostSchema = new Schema({
+
+  description: {
+    type: String,
+    required: [true, 'La descripcion es obligatorio'],
+    trim: true,
+  },
+  image: {
+    type: String, // Puede ser una URL o nombre de archivo
+    default: ''
+  },
+
+  author: {
+    type: Types.ObjectId,
+    ref: 'User',
+    required: [true, 'El autor es obligatorio']
+  },
+
+  comments: [{
+    type: Types.ObjectId,
+    ref: 'Comment' // Este modelo lo harás después
+  }],
+
+  likes: [{
+    type: Types.ObjectId,
+    ref: 'User'
+  }]
+  
+}, { timestamps: true });
+
+module.exports = mongoose.model('Post', PostSchema);
