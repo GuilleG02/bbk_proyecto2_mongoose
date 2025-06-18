@@ -5,7 +5,7 @@ const { jwt_secret } = require('../config/keys.js')
 
 const UserController = {
 
-async register(req, res) {
+async register(req, res, next) {
   try {
     const { name, email, password, age } = req.body;
 
@@ -27,8 +27,8 @@ async register(req, res) {
 
     res.status(201).send({ message: 'Usuario registrado con éxito', user: userResponse });
   } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: 'Error al registrar usuario' });
+    error.origin = 'usuario'
+    next(error)
   }
 },
 
