@@ -9,7 +9,7 @@ const PostSchema = new Schema({
     trim: true,
   },
   image: {
-    type: String, // Puede ser una URL o nombre de archivo
+    type: String, 
     default: ''
   },
 
@@ -21,7 +21,7 @@ const PostSchema = new Schema({
 
   comments: [{
     type: Types.ObjectId,
-    ref: 'Comment' // Este modelo lo harás después
+    ref: 'Comment'
   }],
 
   likes: [{

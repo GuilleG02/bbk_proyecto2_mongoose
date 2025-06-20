@@ -9,11 +9,11 @@ async register(req, res, next) {
   try {
     const { name, email, password, age } = req.body;
 
-    // 1. Generar el hash de la contraseña
+    //Generar el hash de la contraseña
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // 2. Crear usuario con la contraseña hasheada
+    //Crear usuario con la contraseña hasheada
     const user = await User.create({
       name,
       email,
@@ -21,7 +21,7 @@ async register(req, res, next) {
       age
     });
 
-    // 3. No devolver la contraseña en la respuesta
+    //No devolver la contraseña en la respuesta
     const userResponse = user.toObject();
     delete userResponse.password;
 
