@@ -80,7 +80,76 @@ const CommentController = {
       } catch (error) {
         next(error);
       }
+    },
+
+
+    async updateComment(req, res, next) {
+
+  try {
+
+    const commentId = req.params.id;
+    const userId = req.user._id;
+    const { content } = req.body;
+
+    if (!content) {
+      return res.status(400).send({ message: 'Debes hacer algun cambio' });
     }
+
+    const comment = await Comment.findById(commentId);
+
+    if (!comment) {
+      return res.status(404).send({ message: 'Comentario no encontrado' });
+    }
+
+    if (!comment.author.equals(userId)) {
+      return res.status(403).send({ message: 'No puedes editar este comentario' });
+    }
+
+    comment.content = content;
+    await comment.save();
+
+    const updatedComment = await comment.populate('author', 'name email');
+
+    res.send({ message: 'Comentario actualizado', comment: updatedComment });
+  } catch (error) {
+    error.origin = 'comment';
+    next(error);
+  }
+},
+
+async deleteComment(req, res, next) {
+
+  try {
+
+    const commentId = req.params.id;
+    const userId = req.user._id;
+
+    const comment = await Comment.findById(commentId);
+
+    if (!comment) {
+      return res.status(404).send({ message: 'Comentario no encontrado' });
+    }
+
+    if (!comment.author.equals(userId)) {
+      return res.status(403).send({ message: 'No puedes eliminar este comentario' });
+    }
+
+    await Post.findByIdAndUpdate(comment.post, {
+      $pull: { comments: comment._id }
+
+    });
+
+    await comment.deleteOne();
+
+    res.send({ message: 'Comentario eliminado con éxito' });
+    
+  } catch (error) {
+    error.origin = 'comment';
+    next(error);
+  }
+}
+
+
 
 }
 
