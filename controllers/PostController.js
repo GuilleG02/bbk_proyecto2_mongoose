@@ -85,22 +85,30 @@ const PostController = {
 },
 
 async getAll(req, res, next) {
-    try {
-      const { page = 1, limit = 10 } = req.query;
+  try {
+    const { page = 1, limit = 10 } = req.query;
 
-      const posts = await Post.find()
-        .populate('author', 'name email')      
-        .populate('comments')                   
-        .limit(Number(limit))
-        .skip((Number(page) - 1) * Number(limit))
-        .sort({ createdAt: -1 });
+    const posts = await Post.find()
+      .populate('author', 'name email')
+      .populate({
+        path: 'comments',
+        populate: {
+          path: 'author',
+          select: 'name email'
+        }
+      })
+      .limit(Number(limit))
+      .skip((Number(page) - 1) * Number(limit))
+      .sort({ createdAt: -1 });
 
-      res.send(posts);
-    } catch (error) {
-      error.origin = 'post';
-      next(error);
-    }
-  },
+    res.send(posts);
+  } catch (error) {
+    error.origin = 'post';
+    next(error);
+  }
+},
+
+
 
 async findPostById(req, res, next) {
 
