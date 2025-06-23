@@ -1,4 +1,7 @@
 const User = require('../models/User')
+const Post = require('../models/Post');
+
+
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const { jwt_secret } = require('../config/keys.js')
@@ -80,19 +83,135 @@ async logout(req, res) {
 
 async getProfile(req, res) {
   try {
-
     if (!req.user) {
       return res.status(401).send({ message: 'Usuario no autenticado' });
     }
 
-    const userObj = req.user.toObject();
-    const { password, tokens, ...userData } = userObj;
+    const user = await User.findById(req.user._id)
+      .select('-password -tokens') // excluimos estos campos
+      .populate('followers', 'name') 
+      .lean(); // convierte a objeto JS plano 
 
-    res.send({ user: userData });
+    const posts = await Post.find({ author: req.user._id }).sort({ createdAt: -1 });
+
+    const profile = {
+      ...user,
+      followersCount: user.followers?.length || 0,
+      posts
+    };
+
+    res.send({ user: profile });
   } catch (error) {
-    
     console.error('Error en getProfile:', error);
     res.status(500).send({ message: 'Error al obtener perfil del usuario' });
+  }
+},
+
+
+async findByName(req, res, next) {
+
+  try {
+
+    const name = req.params.name;
+    if (!name) {
+      return res.status(400).send({ message: 'Debes proporcionar un nombre' });
+    }
+
+    const users = await User.find({
+      name: { $regex: new RegExp(name, 'i') } // búsqueda parcial, insensible a mayúsculas
+    }).select('-password -tokens');
+
+    if (users.length === 0) {
+      return res.status(404).send({ message: 'No se encontraron usuarios' });
+    }
+
+    res.send({ users });
+  } catch (error) {
+    error.origin = 'usuario';
+    next(error);
+  }
+},
+
+
+
+async findById(req, res, next) {
+
+  try {
+
+    const userId = req.params.id;
+    const user = await User.findById(userId).select('-password -tokens'); // ocultamos el password y tokens otra vez
+
+    if (!user) {
+      return res.status(404).send({ message: 'Usuario no encontrado' });
+    }
+
+    res.send({ user });
+  } catch (error) {
+    error.origin = 'usuario';
+    next(error);
+  }
+},
+
+
+async follow(req, res, next) {
+  try {
+    const currentUserId = req.user._id;
+    const targetUserId = req.params.id;
+
+    if (currentUserId.equals(targetUserId)) {
+      return res.status(400).send({ message: 'No puedes seguirte a ti mismo' });
+    }
+
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!targetUser || !currentUser) {
+      return res.status(404).send({ message: 'Usuario no encontrado' });
+    }
+
+    if (currentUser.following.includes(targetUserId)) {
+      return res.status(400).send({ message: 'Ya sigues a este usuario' });
+    }
+
+    currentUser.following.push(targetUserId);
+    targetUser.followers.push(currentUserId);
+
+    await currentUser.save();
+    await targetUser.save();
+
+    res.send({ message: `Ahora sigues a ${targetUser.name}` });
+  } catch (error) {
+    error.origin = 'usuario';
+    next(error);
+  }
+},
+
+async unfollow(req, res, next) {
+  try {
+    const currentUserId = req.user._id;
+    const targetUserId = req.params.id;
+
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!targetUser || !currentUser) {
+      return res.status(404).send({ message: 'Usuario no encontrado' });
+    }
+
+    if (!currentUser.following.includes(targetUserId)) {
+      return res.status(400).send({ message: 'No estás siguiendo a este usuario' });
+    }
+
+    currentUser.following.pull(targetUserId);
+    targetUser.followers.pull(currentUserId);
+
+    await currentUser.save();
+    await targetUser.save();
+
+    res.send({ message: `Has dejado de seguir a ${targetUser.name}` });
+  } catch (error) {
+    error.origin = 'usuario';
+    next(error);
   }
 },
 
