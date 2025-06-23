@@ -5,38 +5,39 @@ const Post = require('../models/Post');
 const CommentController = {
 
     async createComment(req, res, next) {
+  try {
+    const { content } = req.body;
+    const postId = req.params.postId;
 
-    try {
-      const { content } = req.body;
-      const postId = req.params.postId;
-
-      if (!content) {
-        return res.status(400).send({ message: 'El contenido del comentario es obligatorio' });
-      }
-
-      const post = await Post.findById(postId);
-      if (!post) {
-        return res.status(404).send({ message: 'Post no encontrado' });
-      }
-
-      const comment = await Comment.create({
-        content,
-        author: req.user._id,
-        post: postId,
-      });
-
-      post.comments.push(comment._id);
-      await post.save();
-
-      const populatedComment = await comment.populate('author', 'name email');
-
-      res.status(201).send({ message: 'Comentario creado con éxito', comment: populatedComment });
-    } catch (error) {
-      error.origin = 'comment';
-      next(error);
+    if (!content) {
+      return res.status(400).send({ message: 'El contenido del comentario es obligatorio' });
     }
-  },
 
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).send({ message: 'Post no encontrado' });
+    }
+
+    const commentData = {
+      content,
+      author: req.user._id,
+      post: postId,
+      image: req.file ? req.file.path : '',
+    };
+
+    const comment = await Comment.create(commentData);
+
+    post.comments.push(comment._id);
+    await post.save();
+
+    const populatedComment = await comment.populate('author', 'name email');
+
+    res.status(201).send({ message: 'Comentario creado con éxito', comment: populatedComment });
+  } catch (error) {
+    error.origin = 'comment';
+    next(error);
+  }
+},
   async likeComment(req, res, next) {
 
       try {
@@ -84,15 +85,13 @@ const CommentController = {
 
 
     async updateComment(req, res, next) {
-
   try {
-
     const commentId = req.params.id;
     const userId = req.user._id;
     const { content } = req.body;
 
-    if (!content) {
-      return res.status(400).send({ message: 'Debes hacer algun cambio' });
+    if (!content && !req.file) {
+      return res.status(400).send({ message: 'Debes hacer algún cambio' });
     }
 
     const comment = await Comment.findById(commentId);
@@ -105,7 +104,9 @@ const CommentController = {
       return res.status(403).send({ message: 'No puedes editar este comentario' });
     }
 
-    comment.content = content;
+    if (content) comment.content = content;
+    if (req.file) comment.image = req.file.path; 
+
     await comment.save();
 
     const updatedComment = await comment.populate('author', 'name email');

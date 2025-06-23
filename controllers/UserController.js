@@ -12,28 +12,66 @@ async register(req, res, next) {
   try {
     const { name, email, password, age } = req.body;
 
-    //Generar el hash de la contraseña
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    //Crear usuario con la contraseña hasheada
+   
+    let avatarPath = undefined;
+    if (req.file) {
+      avatarPath = req.file.path; 
+    }
+
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      age
+      age,
+      avatar: avatarPath,  
     });
 
-    //No devolver la contraseña en la respuesta
     const userResponse = user.toObject();
     delete userResponse.password;
 
     res.status(201).send({ message: 'Usuario registrado con éxito', user: userResponse });
   } catch (error) {
-    error.origin = 'usuario'
-    next(error)
+    error.origin = 'usuario';
+    next(error);
   }
 },
+
+
+async updateUser(req, res, next) {
+  try {
+    const userId = req.params.id;
+
+    if (!req.user._id.equals(userId)) {
+      return res.status(403).send({ message: 'No tienes permiso para actualizar este usuario' });
+    }
+
+    const updateData = { ...req.body };
+
+    if (req.file) {
+      updateData.avatar = req.file.path;
+    }
+
+    if (updateData.password) {
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(updateData.password, saltRounds);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-password -tokens');
+
+    if (!updatedUser) {
+      return res.status(404).send({ message: 'Usuario no encontrado' });
+    }
+
+    res.send({ message: 'Usuario actualizado con éxito', user: updatedUser });
+  } catch (error) {
+    error.origin = 'usuario';
+    next(error);
+  }
+},
+
 
 async login(req, res) {
   try {

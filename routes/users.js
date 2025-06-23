@@ -2,9 +2,11 @@ const express = require('express')
 const router = express.Router()
 const UserController = require('../controllers/UserController')
 const { authentication } = require('../middlewares/authentication')
+const upload = require('../middlewares/upload')
 
 
-router.post('/', UserController.register)
+router.post('/', upload.single('avatar'), UserController.register);
+router.put('/:id', authentication, upload.single('avatar'), UserController.updateUser);
 router.post('/login', UserController.login)
 router.delete('/logout', authentication, UserController.logout)
 router.get('/', authentication, UserController.getProfile);

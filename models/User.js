@@ -33,6 +33,10 @@ const UserSchema = new Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  avatar: {
+  type: String,
+  default: null
+},
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 

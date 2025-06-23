@@ -5,60 +5,58 @@ const PostController = {
 
     
   async createPost(req, res, next) {
-    try {
-      const { description, image } = req.body;
+  try {
+    const { description } = req.body;
+    const image = req.file ? req.file.filename : '';
 
-      if (!description) {
-        return res.status(400).send({ message: 'La descripción es obligatoria' });
-      }
-
-      const newPost = await Post.create({
-        description,
-        image: image || '',
-        author: req.user._id 
-      });
-
-      res.status(201).send({ message: 'Post creado con éxito', post: newPost });
-    } catch (error) {
-      error.origin = 'post';
-      next(error);
+    if (!description) {
+      return res.status(400).send({ message: 'La descripción es obligatoria' });
     }
-  },
+
+    const newPost = await Post.create({
+      description,
+      image,
+      author: req.user._id 
+    });
+
+    res.status(201).send({ message: 'Post creado con éxito', post: newPost });
+  } catch (error) {
+    error.origin = 'post';
+    next(error);
+  }
+},
 
   async updatePost(req, res, next) {
-    
-    try {
-      const { id } = req.params;
-      const { description, image } = req.body;
+  try {
+    const { id } = req.params;
+    const { description } = req.body;
+    const image = req.file ? req.file.filename : undefined;
 
-      const post = await Post.findById(id);
-
-      if (!post) {
-        return res.status(404).send({ message: 'Post no encontrado' });
-      }
-
-      // Solo el autor puede editar su post
-      if (post.author.toString() !== req.user._id.toString()) {
-        return res.status(403).send({ message: 'No tienes permiso para editar este post' });
-      }
-
-      // Validacion
-      if (!description && !image) {
-        return res.status(400).send({ message: 'Nada para actualizar' });
-      }
-
-      // Actualizar campos si vienen
-      if (description) post.description = description;
-      if (image !== undefined) post.image = image;
-
-      await post.save();
-
-      res.status(200).send({ message: 'Post actualizado', post });
-    } catch (error) {
-      error.origin = 'post';
-      next(error);
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).send({ message: 'Post no encontrado' });
     }
-  },
+
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).send({ message: 'No tienes permiso para editar este post' });
+    }
+
+    if (!description && image === undefined) {
+      return res.status(400).send({ message: 'Nada para actualizar' });
+    }
+
+    if (description) post.description = description;
+    if (image !== undefined) post.image = image;
+
+    await post.save();
+
+    res.status(200).send({ message: 'Post actualizado', post });
+  } catch (error) {
+    error.origin = 'post';
+    next(error);
+  }
+},
+
 
   async deletePost(req, res, next) {
   try {

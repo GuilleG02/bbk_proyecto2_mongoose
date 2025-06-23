@@ -13,6 +13,10 @@ const CommentSchema = new Schema({
     ref: 'User',
     required: true,
   },
+  image: {
+  type: String,
+  default: ''
+},
   post: {
     type: Schema.Types.ObjectId,
     ref: 'Post',
