@@ -3,3 +3,5 @@
 /config/keys.js
 
 docker-compose.yml
+
+/uploads/
