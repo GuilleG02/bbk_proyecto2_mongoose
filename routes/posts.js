@@ -11,7 +11,8 @@ router.delete('/:id', authentication, PostController.deletePost);
 router.get('/', PostController.getAll);
 router.get('/:id', PostController.findPostById);
 router.get('/search/:name', PostController.getPostsByName);
-router.post('/like/:id', authentication, PostController.likePost);
-router.post('/unlike/:id', authentication, PostController.unlikePost);
+router.post('/:id/toggleLike', authentication, PostController.toggleLike)
+
+
 
 module.exports = router
