@@ -1,12 +1,14 @@
 const Post = require('../models/Post');
 
 const PostController = {
+  // Crear post
   async createPost(req, res, next) {
     try {
       const { description } = req.body;
       const image = req.file ? req.file.filename : '';
 
-      if (!description) return res.status(400).send({ message: 'La descripción es obligatoria' });
+      if (!description)
+        return res.status(400).send({ message: 'La descripción es obligatoria' });
 
       const newPost = await Post.create({
         description,
@@ -20,6 +22,7 @@ const PostController = {
     }
   },
 
+  // Actualizar post
   async updatePost(req, res, next) {
     try {
       const { id } = req.params;
@@ -28,7 +31,8 @@ const PostController = {
 
       const post = await Post.findById(id);
       if (!post) return res.status(404).send({ message: 'Post no encontrado' });
-      if (post.author.toString() !== req.user._id.toString()) return res.status(403).send({ message: 'No tienes permiso para editar este post' });
+      if (post.author.toString() !== req.user._id.toString())
+        return res.status(403).send({ message: 'No tienes permiso para editar este post' });
 
       if (description) post.description = description;
       if (image !== undefined) post.image = image;
@@ -40,12 +44,14 @@ const PostController = {
     }
   },
 
+  // Eliminar post
   async deletePost(req, res, next) {
     try {
       const { id } = req.params;
       const post = await Post.findById(id);
       if (!post) return res.status(404).send({ message: 'Post no encontrado' });
-      if (post.author.toString() !== req.user._id.toString()) return res.status(403).send({ message: 'No tienes permiso para eliminar este post' });
+      if (post.author.toString() !== req.user._id.toString())
+        return res.status(403).send({ message: 'No tienes permiso para eliminar este post' });
 
       await Post.findByIdAndDelete(id);
       res.status(200).send({ message: 'Post eliminado correctamente' });
@@ -54,6 +60,7 @@ const PostController = {
     }
   },
 
+  // Obtener todos los posts
   async getAll(req, res, next) {
     try {
       const posts = await Post.find()
@@ -67,6 +74,7 @@ const PostController = {
     }
   },
 
+  // Obtener post por ID
   async findPostById(req, res, next) {
     try {
       const post = await Post.findById(req.params.id)
@@ -80,6 +88,7 @@ const PostController = {
     }
   },
 
+  // Buscar posts por descripción
   async getPostsByName(req, res, next) {
     try {
       const regex = new RegExp(req.params.name, 'i');
@@ -93,6 +102,7 @@ const PostController = {
     }
   },
 
+  // Dar/Quitar like
   async toggleLike(req, res, next) {
     try {
       const post = await Post.findById(req.params.id);
@@ -105,7 +115,12 @@ const PostController = {
       else post.likes.push(userId);
 
       await post.save();
-      res.send({ message: index >= 0 ? 'Like quitado' : 'Like añadido', liked: index < 0, likesCount: post.likes.length, post });
+      res.send({
+        message: index >= 0 ? 'Like quitado' : 'Like añadido',
+        liked: index < 0,
+        likesCount: post.likes.length,
+        post
+      });
     } catch (error) {
       next(error);
     }
