@@ -83,8 +83,8 @@ const UserController = {
 
       const user = await User.findById(req.user._id)
         .select('-password -tokens')
-        .populate('following', 'name avatar')  
-        .populate('followers', 'name avatar')  
+        .populate('following', 'name avatar')
+        .populate('followers', 'name avatar')
         .lean()
 
       const posts = await Post.find({ author: req.user._id })
@@ -166,8 +166,34 @@ const UserController = {
     }
   },
 
-  findById: async (req, res) => res.status(501).send({ message: 'findById no implementado' }),
-  findByName: async (req, res) => res.status(501).send({ message: 'findByName no implementado' }),
+  findById: async (req, res) => {
+    try {
+      const user = await User.findById(req.params.id)
+        .select('-password -tokens')
+        .populate('followers', 'name avatar')
+        .populate('following', 'name avatar')
+
+      if (!user) return res.status(404).send({ message: 'Usuario no encontrado' })
+      res.send({ user })
+    } catch (error) {
+      res.status(500).send({ message: 'Error al buscar usuario por id' })
+    }
+  },
+
+  findByName: async (req, res) => {
+    try {
+      const name = req.params.name
+      if (!name) return res.status(400).send({ message: 'Se requiere un nombre' })
+
+      const users = await User.find({
+        name: { $regex: name, $options: 'i' }
+      }).select('-password -tokens')
+
+      res.send({ users })
+    } catch (error) {
+      res.status(500).send({ message: 'Error al buscar usuarios' })
+    }
+  }
 }
 
 module.exports = UserController
